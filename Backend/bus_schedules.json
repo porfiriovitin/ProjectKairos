@@ -1,0 +1,196 @@
+{
+  "15/09/2026": [
+    {
+      "bus_code": "BUS-001",
+      "bus_company": "Itapemirim",
+      "bus_prefix": "40366",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Rio de Janeiro",
+        "departure_time": "14:30"
+      },
+      "bus_kind": "Semi-leito",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-002",
+      "bus_company": "Empresa Gontijo",
+      "bus_prefix": "15010",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Recife",
+        "departure_time": "07:15"
+      },
+      "bus_kind": "Leito",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-003",
+      "bus_company": "Viação Garcia",
+      "bus_prefix": "92100",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Maringá",
+        "departure_time": "08:00"
+      },
+      "bus_kind": "Executivo",
+      "has_accessibility": false
+    },
+    {
+      "bus_code": "BUS-004",
+      "bus_company": "Expresso Nordeste",
+      "bus_prefix": "5521",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Campo Mourão",
+        "departure_time": "08:40"
+      },
+      "bus_kind": "Convencional",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-005",
+      "bus_company": "Auto Viação Catarinense",
+      "bus_prefix": "325500",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Brusque",
+        "departure_time": "09:10"
+      },
+      "bus_kind": "Semi-leito",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-006",
+      "bus_company": "Viação Cometa",
+      "bus_prefix": "17304",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Curitiba",
+        "departure_time": "09:30"
+      },
+      "bus_kind": "Leito",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-007",
+      "bus_company": "Expresso Nossa Senhora da Penha",
+      "bus_prefix": "63005",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Florianópolis",
+        "departure_time": "10:00"
+      },
+      "bus_kind": "Leito Cama",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-008",
+      "bus_company": "Viação Ouro e Prata",
+      "bus_prefix": "707",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Chapecó",
+        "departure_time": "10:25"
+      },
+      "bus_kind": "Semi-leito",
+      "has_accessibility": false
+    },
+    {
+      "bus_code": "BUS-009",
+      "bus_company": "Planalto Transportes",
+      "bus_prefix": "2695",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Passo Fundo",
+        "departure_time": "11:00"
+      },
+      "bus_kind": "Executivo",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-010",
+      "bus_company": "Expresso Princesa dos Campos",
+      "bus_prefix": "7546",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Telêmaco Borba",
+        "departure_time": "11:30"
+      },
+      "bus_kind": "Convencional",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-011",
+      "bus_company": "Empresa Princesa do Norte",
+      "bus_prefix": "65533",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Brasília",
+        "departure_time": "12:10"
+      },
+      "bus_kind": "Leito",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-012",
+      "bus_company": "Eucatur",
+      "bus_prefix": "6037",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Campo Grande",
+        "departure_time": "13:00"
+      },
+      "bus_kind": "Semi-leito",
+      "has_accessibility": false
+    },
+    {
+      "bus_code": "BUS-013",
+      "bus_company": "Viação Águia Branca",
+      "bus_prefix": "51400",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Curitiba",
+        "departure_time": "13:40"
+      },
+      "bus_kind": "Leito Cama",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-014",
+      "bus_company": "Brasil Sul",
+      "bus_prefix": "3885",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Porto Alegre",
+        "departure_time": "14:20"
+      },
+      "bus_kind": "Leito",
+      "has_accessibility": true
+    },
+    {
+      "bus_code": "BUS-015",
+      "bus_company": "Expresso Transpen",
+      "bus_prefix": "42000",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Campinas",
+        "departure_time": "15:00"
+      },
+      "bus_kind": "Executivo",
+      "has_accessibility": false
+    },
+    {
+      "bus_code": "BUS-016",
+      "bus_company": "Viação Graciosa",
+      "bus_prefix": "2205",
+      "itinerary": {
+        "from": "São Paulo",
+        "to": "Guaratuba",
+        "departure_time": "15:40"
+      },
+      "bus_kind": "Convencional",
+      "has_accessibility": true
+    }
+  ]
+}
