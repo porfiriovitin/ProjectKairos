@@ -35,6 +35,108 @@ def label(image, text, x, y, color, scale=0.5):
 
 
 class Overlay:
+    def render_boarding(self, frame, detections, people, boarding, text_tracker, notifier, timestamp, metrics, offline):
+        from services.boarding import EVENT_TITLES
+        from vision.platform_geometry import platform_zone
+
+        height, width = frame.shape[:2]
+        video = frame.copy()
+        platform_colors = {"63": PURPLE, "62": CYAN}
+        for number, state in boarding.platforms.items():
+            color = platform_colors[number]
+            zone = platform_zone(state.anchor, width, height)
+            tint = video.copy()
+            cv2.fillConvexPoly(tint, zone, color)
+            video = cv2.addWeighted(tint, 0.07, video, 0.93, 0)
+            ax, ay = state.anchor
+            label(video, f"PLATAFORMA {number}", int(ax * width - 55), int(ay * height - 44), color)
+        by_track = {s.track_id: s for s in boarding.platforms.values() if s.track_id is not None}
+        for detection in detections:
+            state = by_track.get(detection.track_id)
+            x1, y1, x2, y2 = detection.bbox
+            color = platform_colors[state.number] if state else MUTED
+            cv2.rectangle(video, (x1, y1), (x2, y2), color, 2 if state else 1)
+            if state:
+                bus = state.bus
+                label(video, f"P{state.number} | {bus['bus_company']} {bus['bus_prefix']}", x1, y1 - 8, color, 0.55)
+                label(video, state.status, x1, y2 - 7, GREEN if "BUS_DEPARTED" in state.emitted else color, 0.45)
+            for region in text_tracker.regions.get(detection.track_id, []):
+                polygon = region.polygon.astype(np.int32)
+                center = polygon.mean(axis=0)
+                if x1 <= center[0] <= x2 and y1 <= center[1] <= y2:
+                    text_color = GREEN if region.exact_match else COLORS[region.kind]
+                    cv2.polylines(video, [polygon], True, text_color, 2, cv2.LINE_AA)
+                    if region.kind == "PREFIXO":
+                        caption = region.expected_prefix or region.text
+                        label(video, caption, polygon[:, 0].min(), polygon[:, 1].max() + 20, text_color, 0.40)
+        for person in people:
+            owner = next((s for s in boarding.platforms.values() if person.track_id in s.people_ids), None)
+            x1, y1, x2, y2 = person.bbox
+            color = platform_colors[owner.number] if owner else MUTED
+            cv2.rectangle(video, (x1, y1), (x2, y2), color, 2 if owner else 1)
+            label(video, f"P{owner.number} / pessoa" if owner else "Pessoa", x1, y1 - 5, color, 0.36)
+
+        sidebar, top, bottom = 370, 76, 48
+        canvas = np.full((max(height, 680) + top + bottom, width + sidebar, 3), BACKGROUND, dtype=np.uint8)
+        canvas[top:top + height, :width] = video
+        cv2.rectangle(canvas, (width, top), (width + sidebar, canvas.shape[0] - bottom), PANEL, -1)
+        write(canvas, "BOARDING MONITOR", (24, 34), WHITE, 0.85, 2)
+        write(canvas, "VISAO COMPUTACIONAL  /  PLATAFORMAS E EMBARQUE", (24, 57), CYAN, 0.43)
+        write(canvas, f"{timestamp:05.1f}s  |  {metrics['fps']:.1f} FPS  |  YOLO {metrics['detection_ms']:.0f} ms", (max(580, width - 475), 32), WHITE, 0.52)
+        write(canvas, "AUDITORIA: TODOS OS FRAMES" if offline else "MONITORAMENTO DAS PLATAFORMAS", (max(580, width - 475), 55), MUTED, 0.42)
+        left, y = width + 24, top + 30
+        write(canvas, "CENTRAL DE EMBARQUE", (left, y), WHITE, 0.60, 2)
+        y += 28
+        for number, state in boarding.platforms.items():
+            color = platform_colors[number]
+            cv2.line(canvas, (left, y), (width + sidebar - 24, y), color, 1)
+            y += 27
+            write(canvas, f"PLATAFORMA {number}", (left, y), color, 0.61, 2)
+            write(canvas, f"{state.people_count:02}", (width + sidebar - 74, y + 3), WHITE, 0.95, 2)
+            y += 23
+            write(canvas, "pessoas visiveis", (width + sidebar - 137, y), MUTED, 0.36)
+            write(canvas, state.bus["bus_company"], (left, y), WHITE, 0.52)
+            y += 23
+            write(canvas, f"{state.bus['bus_prefix']} / {state.bus['bus_code']}", (left, y), AMBER, 0.48)
+            y += 23
+            route = state.bus["itinerary"]
+            write(canvas, f"{route['from']} > {route['to']}", (left, y), MUTED, 0.42)
+            y += 22
+            write(canvas, f"Saida {route['departure_time']}", (left, y), MUTED, 0.42)
+            y += 25
+            status = "SEM VISIBILIDADE" if state.lost and state.first_seen is not None and "BUS_DEPARTED" not in state.emitted else state.status
+            write(canvas, status, (left, y), GREEN if state.emitted else MUTED, 0.45, 1)
+            y += 25
+        cv2.line(canvas, (left, y), (width + sidebar - 24, y), MUTED, 1)
+        y += 27
+        write(canvas, f"NOTIFICACOES / {len(notifier.events)} EVENTOS", (left, y), GREEN, 0.47, 2)
+        boarding_events = [event for event in notifier.events if event.get("scene") == "boarding"]
+        if boarding_events:
+            event = boarding_events[-1]
+            y += 25
+            write(canvas, EVENT_TITLES[event["event"]], (left, y), WHITE, 0.47, 2)
+            y += 24
+            write(canvas, f"P{event['platform']} / {event['bus_code']} / {event['video_seconds']:.1f}s", (left, y), AMBER, 0.43)
+            y += 24
+            for line in textwrap.wrap(event["message"], 40):
+                write(canvas, line, (left, y), MUTED, 0.38)
+                y += 19
+            for passenger in notifier.passengers:
+                if passenger["passenger_code"] in event["passenger_codes"]:
+                    write(canvas, passenger["name"][:36], (left, y + 4), GREEN, 0.38)
+                    y += 20
+            if timestamp - event["video_seconds"] <= 5:
+                toast_y = top + height - 83
+                cv2.rectangle(canvas, (20, toast_y), (min(width - 20, 875), toast_y + 68), BACKGROUND, -1)
+                write(canvas, f"P{event['platform']}  |  {EVENT_TITLES[event['event']]}", (35, toast_y + 25), GREEN, 0.62, 2)
+                write(canvas, event["message"][:93], (35, toast_y + 50), WHITE, 0.40)
+        footer = canvas.shape[0] - 18
+        write(canvas, "PLATAFORMA 63", (24, footer), PURPLE, 0.43)
+        write(canvas, "PLATAFORMA 62", (195, footer), CYAN, 0.43)
+        write(canvas, "Contagem visual estimada | Inclui funcionarios na area", (370, footer), MUTED, 0.40)
+        write(canvas, "ESPACO pausa | Q sair", (width + 24, footer), MUTED, 0.44)
+        return canvas
+
     def render(self, frame, detections, monitor, text_tracker, notifier, timestamp, metrics, date, offline):
         height, width = frame.shape[:2]
         video = frame.copy()
