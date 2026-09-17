@@ -17,6 +17,8 @@ Com visão computacional, a solução acompanha a chegada do ônibus no terminal
 3. A aplicação procura empresa, prefixo e letreiro no veículo.
 4. As leituras são comparadas à programação disponível.
 5. Após confirmações consecutivas, o evento `BUS_ARRIVED` é exibido com os passageiros que devem ser notificados.
+6. Ao terminar a chegada, a mesma janela passa automaticamente para `OnibusDandoEmbarque.mp4`.
+7. YOLO acompanha ônibus e pessoas nas plataformas 63 e 62; o painel mostra os estados e as notificações de cada viagem.
 
 No vídeo padrão, a chegada simulada ocorre a partir de aproximadamente **20 segundos**. O evento não é disparado apenas pelo tempo: também depende da confirmação da empresa e do prefixo por leituras repetidas.
 
@@ -31,6 +33,28 @@ Depois da instalação, execute na raiz do projeto:
 A janela mostrará o vídeo processado e o painel de identificação. Use `Espaço` para pausar ou retomar e `Q` ou `Esc` para encerrar.
 
 Resultado esperado: identificação do `BUS-001` (Itapemirim, prefixo `40366`), na rota São Paulo → Rio de Janeiro, às 14:30, com os passageiros mockados associados à viagem.
+
+Na segunda cena, os ônibus são outros: à esquerda, plataforma **63**, `BUS-003`, Gontijo `19360`, São Paulo → Maringá; à direita, plataforma **62**, `BUS-002`, Gontijo `14080`, São Paulo → Recife. Os dados vêm da programação e os destinatários são relacionados por `bus_code` em `passengers.json`.
+
+## Monitoramento de embarque
+
+A interface mantém as caixas rastreadas, o painel lateral e os avisos visuais. Cada plataforma tem estado independente e contagem de pessoas visíveis na região de acesso ao ônibus.
+
+| Evento | Evidência usada |
+| --- | --- |
+| `BUS_AT_PLATFORM` | Ônibus presente na região da plataforma por pelo menos 1 segundo. |
+| `BUS_PARKED` | Posição estável em relação à placa da plataforma por 2,5 segundos, após histórico de movimento. |
+| `BOARDING_STARTED` | Presença persistente de pessoas junto ao acesso, após a parada; informa a contagem daquele momento. |
+| `BOARDING_FINISHED` | Acesso sem pessoas detectadas durante 12 segundos, após início do embarque, ou saída observada do ônibus. |
+| `BUS_DEPARTED` | Ônibus rastreado fora da região de parada durante 2,5 segundos. |
+
+São **heurísticas visuais de demonstração**, não reconhecimento de abertura de portas ou confirmação individual de embarque. A contagem é instantânea e estimada, inclui funcionários e não representa total de passageiros embarcados. Oclusões podem reduzir a contagem. A perda da detecção do ônibus, sozinha, não confirma saída nem encerramento.
+
+A associação entre plataforma e viagem foi configurada conforme os ônibus informados para este vídeo; não é apresentada como identidade reconhecida pelo OCR. A calibração fica em `config/platforms.json`. As placas são acompanhadas por correspondência visual para compensar movimentos da câmera; os textos OCR continuam sendo desenhados quando disponíveis. Outra câmera exige nova calibração e validação.
+
+O prefixo frontal também recebe uma caixa própria: sua região é localizada pela numeração escura na faixa amarela e lida no frame de resolução original. O fluxo óptico acompanha a caixa entre leituras. A legenda mostra somente o número da programação. A caixa fica verde após a primeira leitura literal coincidente, com confiança mínima de 0,50, e mantém a confirmação enquanto o mesmo ônibus ocupa a plataforma, inclusive durante falhas temporárias de OCR ou troca do ID de rastreamento. A saída do ônibus, alteração do prefixo esperado ou troca de cena encerra essa confirmação. A geometria da caixa continua sendo atualizada e expira sem evidência visual; a confirmação não mantém uma caixa parada na tela. Leituras parciais e associação pela plataforma não confirmam o OCR. Leituras brutas podem ser conferidas com `--debug`.
+
+O ônibus da plataforma 63 já aparece estacionado no início: a aplicação registra sua presença, parada e saída, sem inventar um embarque não observado. O ônibus da plataforma 62 permanece estacionado no fim do vídeo; não é emitida uma saída artificial. Cada tipo de evento é notificado uma vez por viagem/plataforma/data nesta execução; reaberturas de embarque e múltiplas viagens sucessivas na mesma plataforma ficam fora deste perfil de demonstração.
 
 ## Instalação em outra máquina (Windows)
 
@@ -59,7 +83,7 @@ git clone <URL_DO_REPOSITORIO>
 cd Backend
 ```
 
-Ou copie toda a pasta `Backend` para a nova máquina. Ela precisa incluir `src`, `requirements.txt`, `requirements-cuda.txt`, `bus_schedules.json`, `passengers.json` e o vídeo em `src/videos/`.
+Ou copie toda a pasta `Backend` para a nova máquina. Ela precisa incluir `src`, `config`, `requirements.txt`, `requirements-cuda.txt`, `bus_schedules.json`, `passengers.json` e os dois vídeos em `src/videos/`.
 
 ### 3. Crie um ambiente virtual
 
@@ -134,6 +158,12 @@ Como referência, o projeto foi testado com i5 de 12ª geração + GTX 1650 e Ry
 # Exibe leituras OCR, candidatos e scores no console
 .\venv\Scripts\python.exe src/main.py --debug
 
+# Executa somente o vídeo de chegada
+.\venv\Scripts\python.exe src/main.py --single-video
+
+# Executa somente a cena de embarque
+.\venv\Scripts\python.exe src/main.py --source src/videos/OnibusDandoEmbarque.mp4
+
 # Altera o instante da chegada simulada no MP4 padrão
 .\venv\Scripts\python.exe src/main.py --arrival-seconds 18
 
@@ -149,6 +179,8 @@ Como referência, o projeto foi testado com i5 de 12ª geração + GTX 1650 e Ry
 ```
 
 Para vídeos, a aplicação reduz a imagem para até 1280 px de largura e usa entrada YOLO de 480 px por padrão. Use `--imgsz 640` para maior resolução do detector, considerando o impacto no desempenho.
+
+Na cena de embarque, o padrão é `--boarding-imgsz 640`, para melhorar a detecção de pessoas. `--max-seconds` limita a duração total da sequência. `--snapshot` salva a imagem da chegada e outra com sufixo `-boarding` após o início do embarque. O relatório reúne eventos e métricas das duas cenas. Para outra fonte de embarque, use `--scene boarding --source <fonte> --platform-config <calibracao.json>`.
 
 ## Como a identificação funciona
 
@@ -171,17 +203,22 @@ src/
     detector.py                   YOLO + ByteTrack
     ocr_reader.py                 OCR assíncrono
     text_tracker.py               Fluxo óptico para textos
+    platform_geometry.py          Referências visuais das plataformas
     overlay.py                    Interface de visualização OpenCV
   services/
     bus_matcher.py                Leitura dos mocks e identificação
     arrival.py                    Estado da chegada e deduplicação
+    boarding.py                   Estados de embarque e contagem por plataforma
     notification_service.py       Eventos e notificações no console
 tests/
+  test_boarding.py
   test_matching_and_arrival.py
   test_text_tracker.py
+config/
+  platforms.json                  Calibração da cena de embarque
 ```
 
-Para uma integração futura, substitua a implementação de `NotificationService.notify` pelo transporte desejado, como API, fila ou WebSocket. Os módulos de visão não dependem desse transporte.
+Para uma integração futura, substitua a implementação de `NotificationService.notify` e `notify_boarding` pelo transporte desejado, como API, fila ou WebSocket. Os módulos de visão não dependem desse transporte.
 
 ## Verificação
 
@@ -191,6 +228,8 @@ Para uma integração futura, substitua a implementação de `NotificationServic
 ```
 
 Os testes cobrem confirmação temporal, OCR aproximado, viagens ambíguas, isolamento do matching, passageiros, zona de chegada e deduplicação após troca de track.
+
+Também cobrem estados de embarque, separação das plataformas, contagem, movimento da câmera, falhas de detecção e destinatários das notificações. A sequência completa foi validada sem janela na RTX 4060: aproximadamente 126,7 segundos de execução para 126,5 segundos de vídeo, 17,84 frames analisados por segundo e 758 MB de pico de memória alocada pelo PyTorch. Frames atrasados são descartados para manter o tempo real; isso não significa inferência em todos os 60 FPS do vídeo.
 
 ## Referências
 

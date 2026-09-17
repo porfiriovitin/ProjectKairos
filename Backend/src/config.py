@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_VIDEO = ROOT / "src/videos/OnibusChegandoTerminal.mp4"
+BOARDING_VIDEO = ROOT / "src/videos/OnibusDandoEmbarque.mp4"
 
 
 def project_path(value: str) -> Path:
@@ -30,11 +31,16 @@ def prepare_environment() -> None:
 def arguments():
     parser = argparse.ArgumentParser(description="Boarding Monitor: YOLO + OCR em vídeo contínuo.")
     parser.add_argument("--source", default=str(DEFAULT_VIDEO), help="Vídeo, índice de câmera ou URL RTSP.")
+    parser.add_argument("--boarding-source", default=str(BOARDING_VIDEO), help="Vídeo reproduzido depois da chegada na sequência padrão.")
+    parser.add_argument("--single-video", action="store_true", help="Executa somente --source, sem avançar ao próximo vídeo.")
+    parser.add_argument("--scene", choices=["auto", "arrival", "boarding"], default="auto")
+    parser.add_argument("--platform-config", default="config/platforms.json")
     parser.add_argument("--date", default=None, help="Data da programação DD/MM/AAAA. Mock: única data do JSON.")
     parser.add_argument("--model", default="models/yolo11n.pt")
     parser.add_argument("--device", default="auto", help="auto, cpu ou índice CUDA, por exemplo 0.")
     parser.add_argument("--ocr-device", default="auto", help="auto usa o mesmo dispositivo do YOLO; cpu reduz uso de VRAM.")
     parser.add_argument("--imgsz", type=int, default=480)
+    parser.add_argument("--boarding-imgsz", type=int, default=640, help="Resolução YOLO na cena com pessoas.")
     parser.add_argument("--threads", type=int, default=2)
     parser.add_argument("--frame-width", type=int, default=1280, help="Largura máxima de processamento, preservando a proporção.")
     parser.add_argument("--ocr-interval", type=float, default=0.8, help="Intervalo mínimo de OCR por veículo, em segundos.")
@@ -47,10 +53,10 @@ def arguments():
     parser.add_argument("--output", help="Grava vídeo anotado; requer --offline.")
     parser.add_argument("--report", help="Salva métricas e eventos em JSON.")
     parser.add_argument("--snapshot", help="Salva imagem anotada da primeira chegada.")
-    parser.add_argument("--max-seconds", type=float, help="Limita a duração da fonte processada.")
+    parser.add_argument("--max-seconds", type=float, help="Limita a duração total da sequência processada.")
     parser.add_argument("--prepare", action="store_true", help="Baixa/carrega os modelos e encerra.")
     args = parser.parse_args()
-    if args.imgsz < 320 or args.threads < 1 or args.frame_width < 640 or args.ocr_interval <= 0 or args.arrival_seconds < 0:
+    if args.imgsz < 320 or args.boarding_imgsz < 320 or args.threads < 1 or args.frame_width < 640 or args.ocr_interval <= 0 or args.arrival_seconds < 0:
         parser.error("imgsz >= 320, frame-width >= 640, threads >= 1, ocr-interval > 0 e arrival-seconds >= 0 são obrigatórios.")
     x1, y1, x2, y2 = args.zone
     if not (0 <= x1 < x2 <= 1 and 0 <= y1 < y2 <= 1):
