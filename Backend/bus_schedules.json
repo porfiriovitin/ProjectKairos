@@ -10,31 +10,34 @@
         "departure_time": "14:30"
       },
       "bus_kind": "Semi-leito",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "60"
     },
     {
       "bus_code": "BUS-002",
-      "bus_company": "Empresa Gontijo",
-      "bus_prefix": "15010",
+      "bus_company": "Gontijo",
+      "bus_prefix": "14080",
       "itinerary": {
         "from": "São Paulo",
         "to": "Recife",
-        "departure_time": "07:15"
+        "departure_time": "21:00"
       },
       "bus_kind": "Leito",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "62"
     },
     {
       "bus_code": "BUS-003",
-      "bus_company": "Viação Garcia",
-      "bus_prefix": "92100",
+      "bus_company": "Gontijo",
+      "bus_prefix": "19360",
       "itinerary": {
         "from": "São Paulo",
         "to": "Maringá",
-        "departure_time": "08:00"
+        "departure_time": "21:00"
       },
       "bus_kind": "Executivo",
-      "has_accessibility": false
+      "has_accessibility": false,
+      "boarding_platform": "63"
     },
     {
       "bus_code": "BUS-004",
@@ -46,7 +49,8 @@
         "departure_time": "08:40"
       },
       "bus_kind": "Convencional",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "65"
     },
     {
       "bus_code": "BUS-005",
@@ -58,7 +62,8 @@
         "departure_time": "09:10"
       },
       "bus_kind": "Semi-leito",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "74"
     },
     {
       "bus_code": "BUS-006",
@@ -70,7 +75,8 @@
         "departure_time": "09:30"
       },
       "bus_kind": "Leito",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "61"
     },
     {
       "bus_code": "BUS-007",
@@ -82,7 +88,8 @@
         "departure_time": "10:00"
       },
       "bus_kind": "Leito Cama",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "68"
     },
     {
       "bus_code": "BUS-008",
@@ -94,7 +101,8 @@
         "departure_time": "10:25"
       },
       "bus_kind": "Semi-leito",
-      "has_accessibility": false
+      "has_accessibility": false,
+      "boarding_platform": "72"
     },
     {
       "bus_code": "BUS-009",
@@ -106,7 +114,8 @@
         "departure_time": "11:00"
       },
       "bus_kind": "Executivo",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "64"
     },
     {
       "bus_code": "BUS-010",
@@ -118,7 +127,8 @@
         "departure_time": "11:30"
       },
       "bus_kind": "Convencional",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "76"
     },
     {
       "bus_code": "BUS-011",
@@ -130,7 +140,8 @@
         "departure_time": "12:10"
       },
       "bus_kind": "Leito",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "63"
     },
     {
       "bus_code": "BUS-012",
@@ -142,7 +153,8 @@
         "departure_time": "13:00"
       },
       "bus_kind": "Semi-leito",
-      "has_accessibility": false
+      "has_accessibility": false,
+      "boarding_platform": "70"
     },
     {
       "bus_code": "BUS-013",
@@ -154,7 +166,8 @@
         "departure_time": "13:40"
       },
       "bus_kind": "Leito Cama",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "66"
     },
     {
       "bus_code": "BUS-014",
@@ -166,7 +179,8 @@
         "departure_time": "14:20"
       },
       "bus_kind": "Leito",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "75"
     },
     {
       "bus_code": "BUS-015",
@@ -178,7 +192,8 @@
         "departure_time": "15:00"
       },
       "bus_kind": "Executivo",
-      "has_accessibility": false
+      "has_accessibility": false,
+      "boarding_platform": "67"
     },
     {
       "bus_code": "BUS-016",
@@ -190,7 +205,8 @@
         "departure_time": "15:40"
       },
       "bus_kind": "Convencional",
-      "has_accessibility": true
+      "has_accessibility": true,
+      "boarding_platform": "73"
     }
   ]
 }

@@ -1,0 +1,11 @@
+{
+  "presence_seconds": 1.0,
+  "stationary_seconds": 2.5,
+  "boarding_presence_seconds": 1.2,
+  "boarding_quiet_seconds": 12.0,
+  "departure_seconds": 2.5,
+  "platforms": [
+    {"number": "63", "bus_code": "BUS-003", "anchor": [0.17, 0.46], "sign_box": [0.1414, 0.4194, 0.1914, 0.5042]},
+    {"number": "62", "bus_code": "BUS-002", "anchor": [0.47, 0.45], "sign_box": [0.4375, 0.3889, 0.4961, 0.5167]}
+  ]
+}
