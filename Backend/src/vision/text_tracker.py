@@ -13,6 +13,8 @@ class TextRegion:
     polygon: np.ndarray
     points: np.ndarray
     timestamp: float
+    exact_match: bool = False
+    expected_prefix: str | None = None
 
 
 def follow_groups(previous_gray, current_gray, groups):
@@ -78,10 +80,12 @@ class TextTracker:
                 self.regions[track_id].append(region)
         self.previous_gray = gray
 
-    def accept(self, result, gray, timestamp, matcher):
+    def accept(self, result, gray, timestamp, matcher, expected_prefix=None, prefix_confirmed=False):
         regions = []
+        if expected_prefix is not None:
+            expected_prefix = str(expected_prefix)
         for reading in result.readings:
-            kind = matcher.classify_text(reading.text)
+            kind = getattr(reading, "kind", None) or matcher.classify_text(reading.text)
             if kind == "TEXTO":
                 continue
             polygon = np.array(reading.polygon, dtype=np.float32)
@@ -90,7 +94,10 @@ class TextTracker:
             points = cv2.goodFeaturesToTrack(result.gray, maxCorners=24, qualityLevel=0.015, minDistance=3, mask=mask)
             if points is None or len(points) < 3:
                 continue
-            regions.append(TextRegion(reading.text, kind, polygon, points, result.timestamp))
+            exact_match = (kind == "PREFIXO" and expected_prefix is not None
+                           and (prefix_confirmed or (reading.confidence >= 0.5 and reading.text.strip() == expected_prefix)))
+            visible_text = reading.text if reading.confidence >= 0.2 else "ILEGIVEL"
+            regions.append(TextRegion(visible_text, kind, polygon, points, result.timestamp, exact_match, expected_prefix if kind == "PREFIXO" else None))
         if timestamp > result.timestamp:
             motions = follow_groups(result.gray, gray, [region.points for region in regions])
             tracked = []

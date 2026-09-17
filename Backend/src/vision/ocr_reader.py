@@ -14,6 +14,7 @@ class TextReading:
     text: str
     confidence: float
     polygon: list
+    kind: str | None = None
 
 
 @dataclass
@@ -39,7 +40,7 @@ class OCRReader:
         self.calls = 0
         self.seconds = 0.0
 
-    def read(self, frame, detection, timestamp, other_boxes=()) -> OCRResult:
+    def read(self, frame, detection, timestamp, other_boxes=(), prefix_frame=None) -> OCRResult:
         start = perf_counter()
         x1, y1, x2, y2 = detection.bbox
         crop = frame[y1:y2, x1:x2].copy()
@@ -62,6 +63,19 @@ class OCRReader:
                 continue
             points = [[float(px / scale + x1), float(py / scale + y1)] for px, py in polygon]
             readings.append(TextReading(text.strip(), float(confidence), points))
+        if prefix_frame is not None:
+            from vision.prefix_region import locate_prefix
+
+            sx, sy = prefix_frame.shape[1] / frame.shape[1], prefix_frame.shape[0] / frame.shape[0]
+            bounds = locate_prefix(prefix_frame, (int(x1 * sx), int(y1 * sy), int(x2 * sx), int(y2 * sy)))
+            if bounds is not None:
+                left, top, right, bottom = bounds
+                patch = prefix_frame[top:bottom, left:right]
+                patch = cv2.resize(patch, None, fx=4, fy=4, interpolation=cv2.INTER_CUBIC)
+                candidates = self.reader.recognize(cv2.cvtColor(patch, cv2.COLOR_BGR2GRAY), allowlist="0123456789", detail=1)
+                _, text, confidence = max(candidates, key=lambda item: item[2], default=(None, "", 0.0))
+                points = [[left / sx, top / sy], [right / sx, top / sy], [right / sx, bottom / sy], [left / sx, bottom / sy]]
+                readings.append(TextReading(text.strip(), float(confidence), points, "PREFIXO"))
         return OCRResult(
             detection.track_id, timestamp, detection.bbox, readings,
             cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), perf_counter() - start,
@@ -71,10 +85,10 @@ class OCRReader:
     def busy(self):
         return self.future is not None
 
-    def submit(self, frame, detection, timestamp, other_boxes=()):
+    def submit(self, frame, detection, timestamp, other_boxes=(), prefix_frame=None):
         if self.busy:
             return False
-        self.future = self.executor.submit(self.read, frame.copy(), detection, timestamp, other_boxes)
+        self.future = self.executor.submit(self.read, frame.copy(), detection, timestamp, other_boxes, prefix_frame)
         return True
 
     def poll(self, wait=False):

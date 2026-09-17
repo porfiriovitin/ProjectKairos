@@ -45,6 +45,37 @@ class TextTrackerTests(unittest.TestCase):
         tracker.accept(result, self.image, 1.5, None)
         self.assertEqual(len(tracker.regions[1]), 1)
 
+    def read_prefix(self, tracker, text, timestamp, confidence=0.9, track_id=1, confirmed=False):
+        reading = SimpleNamespace(text=text, confidence=confidence, polygon=self.polygon, kind="PREFIXO")
+        result = SimpleNamespace(track_id=track_id, timestamp=timestamp, gray=self.image, readings=[reading])
+        tracker.accept(result, self.image, timestamp, None, "14080", confirmed)
+        return tracker.regions[track_id][0]
+
+    def test_exact_prefix_requires_only_one_literal_reading(self):
+        tracker = TextTracker()
+        self.assertTrue(self.read_prefix(tracker, "14080", 1).exact_match)
+        self.assertTrue(self.read_prefix(tracker, "14080", 2).exact_match)
+
+    def test_partial_fuzzy_or_low_confidence_prefix_is_not_exact(self):
+        for text, confidence in [("1080", 0.99), ("14O80", 0.99), ("14080", 0.3)]:
+            tracker = TextTracker()
+            self.read_prefix(tracker, text, 1, confidence)
+            region = self.read_prefix(tracker, text, 2, confidence)
+            self.assertFalse(region.exact_match)
+            self.assertEqual(region.expected_prefix, "14080")
+
+    def test_confirmed_occupancy_survives_new_track_and_elapsed_time(self):
+        tracker = TextTracker()
+        self.read_prefix(tracker, "14080", 1)
+        self.assertTrue(self.read_prefix(tracker, "1080", 20, track_id=2, confirmed=True).exact_match)
+        self.assertFalse(self.read_prefix(tracker, "1080", 21, track_id=3).exact_match)
+
+    def test_mismatched_reading_keeps_confirmed_prefix_box(self):
+        tracker = TextTracker()
+        self.read_prefix(tracker, "14080", 1)
+        self.read_prefix(tracker, "14080", 2)
+        self.assertTrue(self.read_prefix(tracker, "19080", 3, confirmed=True).exact_match)
+
 
 if __name__ == "__main__":
     unittest.main()
