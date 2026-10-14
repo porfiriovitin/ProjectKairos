@@ -1,0 +1,41 @@
+.event-history > button {
+  display: flex;
+  align-items: start;
+  gap: 13px;
+  padding: 20px 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #dedfe4;
+  width: 100%;
+  text-align: left;
+}
+.event-symbol {
+  background: white;
+  color: var(--blue);
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.event-history > button > div {
+  flex: 1;
+}
+.event-history strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.event-history p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-top: 7px;
+}
+.event-history small {
+  font-size: 9px;
+  color: var(--muted);
+  display: block;
+  margin-top: 9px;
+}
+.event-history > button > span:last-child {
+  font-size: 10px;
+  color: var(--muted);
+}
