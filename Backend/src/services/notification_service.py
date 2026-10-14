@@ -4,8 +4,9 @@ import json
 
 
 class NotificationService:
-    def __init__(self, passengers: list[dict]):
+    def __init__(self, passengers: list[dict], event_sink=None):
         self.passengers = passengers
+        self.event_sink = event_sink
         self.events: list[dict] = []
         self.sent_boarding_events = set()
 
@@ -38,6 +39,8 @@ class NotificationService:
             "message": messages[observation["event"]],
         }
         self.events.append(event)
+        if self.event_sink:
+            self.event_sink(event)
         print("\n" + "=" * 68)
         print("[EVENT] " + json.dumps(event, ensure_ascii=False))
         for passenger in passengers:
@@ -61,8 +64,11 @@ class NotificationService:
             "identity_source": "YOLO_EASYOCR_SCHEDULE_MATCH",
             "match_score": round(score, 3),
             "passenger_codes": [p["passenger_code"] for p in passengers],
+            "message": "Seu ônibus chegou à rodoviária. Acompanhe as próximas informações de embarque.",
         }
         self.events.append(event)
+        if self.event_sink:
+            self.event_sink(event)
         print("\n" + "=" * 68)
         print("[EVENT] " + json.dumps(event, ensure_ascii=False))
         for passenger in passengers:

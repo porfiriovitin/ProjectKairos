@@ -35,7 +35,7 @@ def label(image, text, x, y, color, scale=0.5):
 
 
 class Overlay:
-    def render_boarding(self, frame, detections, people, boarding, text_tracker, notifier, timestamp, metrics, offline):
+    def render_boarding(self, frame, detections, people, boarding, text_tracker, notifier, timestamp, metrics, offline, video_only=False):
         from services.boarding import EVENT_TITLES
         from vision.platform_geometry import platform_zone
 
@@ -76,6 +76,8 @@ class Overlay:
             cv2.rectangle(video, (x1, y1), (x2, y2), color, 2 if owner else 1)
             label(video, f"P{owner.number} / pessoa" if owner else "Pessoa", x1, y1 - 5, color, 0.36)
 
+        if video_only:
+            return video
         sidebar, top, bottom = 370, 76, 48
         canvas = np.full((max(height, 680) + top + bottom, width + sidebar, 3), BACKGROUND, dtype=np.uint8)
         canvas[top:top + height, :width] = video
@@ -137,7 +139,7 @@ class Overlay:
         write(canvas, "ESPACO pausa | Q sair", (width + 24, footer), MUTED, 0.44)
         return canvas
 
-    def render(self, frame, detections, monitor, text_tracker, notifier, timestamp, metrics, date, offline):
+    def render(self, frame, detections, monitor, text_tracker, notifier, timestamp, metrics, date, offline, video_only=False):
         height, width = frame.shape[:2]
         video = frame.copy()
         if monitor.mode == "zone":
@@ -170,6 +172,8 @@ class Overlay:
                 label_y = polygon[:, 1].max() + 20 if region.kind == "PREFIXO" else polygon[:, 1].min() - 5
                 label(video, f"{region.kind}: {region.text[:32]}", polygon[:, 0].min(), label_y, text_color, 0.45)
 
+        if video_only:
+            return video
         sidebar = 370
         top, bottom = 76, 48
         canvas = np.full((max(height, 680) + top + bottom, width + sidebar, 3), BACKGROUND, dtype=np.uint8)

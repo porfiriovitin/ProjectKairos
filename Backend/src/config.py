@@ -55,7 +55,16 @@ def arguments():
     parser.add_argument("--snapshot", help="Salva imagem anotada da primeira chegada.")
     parser.add_argument("--max-seconds", type=float, help="Limita a duração total da sequência processada.")
     parser.add_argument("--prepare", action="store_true", help="Baixa/carrega os modelos e encerra.")
+    parser.add_argument("--ws-host", default="127.0.0.1", help="Endereço do WebSocket do painel.")
+    parser.add_argument("--ws-port", type=int, default=8765, help="Porta do WebSocket do painel.")
+    parser.add_argument("--stream-fps", type=int, default=20, help="Limite de FPS enviados ao painel local.")
+    parser.add_argument("--no-websocket", action="store_true", help="Desativa o painel WebSocket.")
+    parser.add_argument("--keep-dashboard", action="store_true", help="Mantém o histórico acessível após o vídeo, até Ctrl+C.")
     args = parser.parse_args()
+    if not 1 <= args.ws_port <= 65535:
+        parser.error("ws-port deve estar entre 1 e 65535.")
+    if not 1 <= args.stream_fps <= 60:
+        parser.error("stream-fps deve estar entre 1 e 60.")
     if args.imgsz < 320 or args.boarding_imgsz < 320 or args.threads < 1 or args.frame_width < 640 or args.ocr_interval <= 0 or args.arrival_seconds < 0:
         parser.error("imgsz >= 320, frame-width >= 640, threads >= 1, ocr-interval > 0 e arrival-seconds >= 0 são obrigatórios.")
     x1, y1, x2, y2 = args.zone

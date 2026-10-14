@@ -81,6 +81,8 @@ def run(args):
     scene_processed = 0
     scene_start = perf_counter()
     output_fps = None
+    dashboard = None
+    frame_stream = None
     try:
         source = VideoSource(args.source, args.offline)
         scene = ("boarding" if project_path(args.source).resolve() == BOARDING_VIDEO.resolve() else "arrival") if args.scene == "auto" else args.scene
@@ -89,7 +91,13 @@ def run(args):
             raise ValueError("Câmeras usam --arrival-mode zone; tempo simulado é restrito a vídeos.")
         monitor = ArrivalMonitor(mode, args.arrival_seconds, args.zone)
         matcher = BusMatcher(buses)
-        notifier = NotificationService(passengers)
+        if not args.no_websocket:
+            from services.dashboard_socket import DashboardSocket
+            dashboard = DashboardSocket(date, buses, passengers, args.ws_host, args.ws_port)
+            dashboard.start()
+            from services.frame_stream import FrameStream
+            frame_stream = FrameStream(dashboard.publish_frame, fps=args.stream_fps)
+        notifier = NotificationService(passengers, dashboard.publish if dashboard else None)
         text_tracker = TextTracker()
         overlay = Overlay()
         boarding = None
@@ -200,9 +208,11 @@ def run(args):
             elapsed = perf_counter() - started
             metrics = {"fps": processed / max(elapsed, 0.001), "detection_ms": detection_time * 1000}
             if boarding is not None:
-                last_canvas = overlay.render_boarding(frame, detections, people, boarding, text_tracker, notifier, timestamp, metrics, args.offline)
+                last_canvas = overlay.render_boarding(frame, detections, people, boarding, text_tracker, notifier, timestamp, metrics, args.offline, video_only=dashboard is not None)
             else:
-                last_canvas = overlay.render(frame, detections, monitor, text_tracker, notifier, timestamp, metrics, date, args.offline)
+                last_canvas = overlay.render(frame, detections, monitor, text_tracker, notifier, timestamp, metrics, date, args.offline, video_only=dashboard is not None)
+            if frame_stream:
+                frame_stream.submit(scene, last_canvas, timestamp)
             if args.snapshot and scene == "arrival" and notifier.events and not snapshot_saved and timestamp >= notifier.events[0]["video_seconds"] + 1:
                 path = project_path(args.snapshot)
                 path.parent.mkdir(parents=True, exist_ok=True)
@@ -241,6 +251,8 @@ def run(args):
                     if key in (27, ord("q")) or cv2.getWindowProperty("Boarding Monitor", cv2.WND_PROP_VISIBLE) < 1:
                         break
 
+        if frame_stream:
+            frame_stream.close()
         elapsed = perf_counter() - started
         if source_index < len(sources):
             total_skipped += source.skipped
@@ -259,6 +271,8 @@ def run(args):
             "scenes": scene_reports,
             "elapsed_seconds": round(elapsed, 3),
             "processing_fps": round(processed / max(elapsed, 0.001), 2),
+            "stream_frames": frame_stream.sent if frame_stream else 0,
+            "stream_fps": round(frame_stream.sent / max(elapsed, 0.001), 2) if frame_stream else 0,
             "mean_yolo_ms": round(detector_seconds / max(processed, 1) * 1000, 2),
             "ocr_calls": reader.calls,
             "mean_ocr_seconds": round(reader.seconds / max(reader.calls, 1), 3),
@@ -272,8 +286,18 @@ def run(args):
         print("[RESUMO] " + json.dumps(report, ensure_ascii=False), flush=True)
         if not notifier.events:
             print("[AVISO] Nenhuma chegada confirmada. Consulte --debug; não foi usado resultado fixo.", flush=True)
+        if dashboard:
+            dashboard.set_status("completed")
+            if args.keep_dashboard:
+                import threading
+                print("[PAINEL] Processamento encerrado. Histórico disponível até Ctrl+C.", flush=True)
+                threading.Event().wait()
         return 0
     finally:
+        if frame_stream:
+            frame_stream.close()
+        if dashboard:
+            dashboard.close()
         reader.close()
         if source:
             source.close()
