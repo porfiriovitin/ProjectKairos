@@ -60,6 +60,8 @@ Os vídeos, horários e cadastros utilizados na demonstração são **dados simu
 
 ## Documentação técnica
 
+Para abrir o painel e o processamento juntos no Windows, execute `iniciar.bat` na raiz. O painel apresenta as imagens analisadas e as notificações via WebSocket, além de um modo de demonstração para apresentação.
+
 Os detalhes de instalação, execução, arquitetura e tecnologias estão separados por camada:
 
 - [Backend — visão computacional e processamento](/Backend/README.md)

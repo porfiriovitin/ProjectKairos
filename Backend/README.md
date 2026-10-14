@@ -218,7 +218,7 @@ config/
   platforms.json                  Calibração da cena de embarque
 ```
 
-Para uma integração futura, substitua a implementação de `NotificationService.notify` e `notify_boarding` pelo transporte desejado, como API, fila ou WebSocket. Os módulos de visão não dependem desse transporte.
+O painel em `Frontend` recebe os eventos por WebSocket local em `ws://127.0.0.1:8765`. O transporte envia programação, passageiros, histórico e vídeo com as caixas de visão computacional, sem o painel lateral OpenCV. O limite padrão é 20 FPS (`--stream-fps`), condicionado à velocidade da inferência. A codificação JPEG ocorre em outra thread; imagens antigas são substituídas para não acumular atraso. Execute `src/main.py --headless --keep-dashboard` para manter o histórico acessível após o vídeo; `--ws-host` e `--ws-port` configuram o endereço, e `--no-websocket` desativa o transporte. Na raiz, `iniciar.bat` abre ambas as aplicações e exibe o vídeo no navegador. Consulte [a documentação do painel](../Frontend/README-PAINEL.md).
 
 ## Verificação
 
